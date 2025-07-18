@@ -2,7 +2,6 @@ defmodule TimeAttendanceWeb.API.V1.Auth.UserSessionController do
   use TimeAttendanceWeb, :controller
 
   alias TimeAttendance.Accounts
-  alias TimeAttendanceWeb.UserAuth
 
   def create(conn, %{"user" => user_params}) do
     %{"email" => email, "password" => password} = user_params
@@ -21,7 +20,6 @@ defmodule TimeAttendanceWeb.API.V1.Auth.UserSessionController do
         }
       })
     else
-      # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
       conn
       |> json(%{
         message: "Invalid email or password"

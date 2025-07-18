@@ -9,3 +9,12 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+alias TimeAttendance.Repo
+alias TimeAttendance.Accounts.Role
+
+roles = ["Admin", "Staff"]
+Enum.map(roles, fn role ->
+  if Repo.get_by(Role, name: role) == :nil do
+    Repo.insert(%Role{name: role})
+  end
+end)

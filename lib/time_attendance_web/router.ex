@@ -62,8 +62,10 @@ defmodule TimeAttendanceWeb.Router do
 
   ## Authentication routes
 
-  scope "/api/v1", TimeAttendanceWeb.API.V1.Auth do
+  scope "/api/v1", TimeAttendanceWeb.API.V1.Role do
     pipe_through [:api, :api_auth]
+
+    resources "/roles", RoleController
   end
 
   scope "/", TimeAttendanceWeb do

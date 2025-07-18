@@ -11,6 +11,7 @@ defmodule TimeAttendance.Accounts.User do
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :utc_datetime
+    belongs_to :role, TimeAttendance.Accounts.Role
 
     timestamps(type: :utc_datetime)
   end
@@ -40,7 +41,7 @@ defmodule TimeAttendance.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:first_name, :last_name, :email, :password])
+    |> cast(attrs, [:first_name, :last_name, :email, :password, :role_id])
     |> validate_email(opts)
     |> validate_password(opts)
   end

@@ -1,13 +1,9 @@
-defmodule TimeAttendanceWeb.UserResetPasswordController do
+defmodule TimeAttendanceWeb.API.V1.Auth.UserResetPasswordController do
   use TimeAttendanceWeb, :controller
 
   alias TimeAttendance.Accounts
 
   plug :get_user_by_reset_password_token when action in [:edit, :update]
-
-  def new(conn, _params) do
-    render(conn, :new)
-  end
 
   def create(conn, %{"user" => %{"email" => email}}) do
     if user = Accounts.get_user_by_email(email) do

@@ -1,12 +1,8 @@
-defmodule TimeAttendanceWeb.UserSessionController do
+defmodule TimeAttendanceWeb.API.V1.Auth.UserSessionController do
   use TimeAttendanceWeb, :controller
 
   alias TimeAttendance.Accounts
   alias TimeAttendanceWeb.UserAuth
-
-  def new(conn, _params) do
-    render(conn, :new, error_message: nil)
-  end
 
   def create(conn, %{"user" => user_params}) do
     %{"email" => email, "password" => password} = user_params

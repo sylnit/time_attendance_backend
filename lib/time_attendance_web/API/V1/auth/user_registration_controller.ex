@@ -1,14 +1,9 @@
-defmodule TimeAttendanceWeb.UserRegistrationController do
+defmodule TimeAttendanceWeb.API.V1.Auth.UserRegistrationController do
   use TimeAttendanceWeb, :controller
 
   alias TimeAttendance.Accounts
   alias TimeAttendance.Accounts.User
   alias TimeAttendanceWeb.UserAuth
-
-  def new(conn, _params) do
-    changeset = Accounts.change_user_registration(%User{})
-    render(conn, :new, changeset: changeset)
-  end
 
   def create(conn, %{"user" => user_params}) do
     case Accounts.register_user(user_params) do

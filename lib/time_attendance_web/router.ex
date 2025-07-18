@@ -15,6 +15,9 @@ defmodule TimeAttendanceWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+  end
+
+  pipeline :api_auth do
     plug :fetch_api_user
   end
 
@@ -46,19 +49,21 @@ defmodule TimeAttendanceWeb.Router do
     end
   end
 
-  ## Authentication routes
+  ## Open routes
+  scope "/api/v1", TimeAttendanceWeb.API.V1.Auth do
+    pipe_through [:api]
 
-  scope "/", TimeAttendanceWeb do
-    pipe_through [:browser, :redirect_if_user_is_authenticated]
-
-    get "/users/register", UserRegistrationController, :new
     post "/users/register", UserRegistrationController, :create
-    get "/users/log_in", UserSessionController, :new
     post "/users/log_in", UserSessionController, :create
-    get "/users/reset_password", UserResetPasswordController, :new
     post "/users/reset_password", UserResetPasswordController, :create
     get "/users/reset_password/:token", UserResetPasswordController, :edit
     put "/users/reset_password/:token", UserResetPasswordController, :update
+  end
+
+  ## Authentication routes
+
+  scope "/api/v1", TimeAttendanceWeb.API.V1.Auth do
+    pipe_through [:api, :api_auth]
   end
 
   scope "/", TimeAttendanceWeb do

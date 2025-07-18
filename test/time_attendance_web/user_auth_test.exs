@@ -269,4 +269,19 @@ defmodule TimeAttendanceWeb.UserAuthTest do
       refute conn.status
     end
   end
+
+  describe "fetch_api_user/1" do
+    test "fetches user by token", %{conn: conn, user: user} do
+      token = Accounts.create_user_api_token(user)
+      conn = conn |> put_req_header("authorization", "Bearer "<>token) |> UserAuth.fetch_api_user([])
+      assert conn.assigns.current_user == user
+    end
+
+    test "invalid user is unauthorized", %{conn: conn, user: _user} do
+      token = "invalid"
+      conn = conn |> put_req_header("authorization", "Bearer "<>token) |> UserAuth.fetch_api_user([])
+      assert conn.resp_body == "No access for you"
+    end
+  end
+
 end

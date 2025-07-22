@@ -15,7 +15,8 @@ defmodule TimeAttendance.AccountsFixtures do
       first_name: test_first_name(),
       last_name: test_last_name(),
       email: unique_user_email(),
-      password: valid_user_password()
+      password: valid_user_password(),
+      role_id: nil
     })
   end
 
@@ -32,5 +33,19 @@ defmodule TimeAttendance.AccountsFixtures do
     {:ok, captured_email} = fun.(&"[TOKEN]#{&1}[TOKEN]")
     [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")
     token
+  end
+
+  @doc """
+  Generate a role.
+  """
+  def role_fixture(attrs \\ %{}) do
+    {:ok, role} =
+      attrs
+      |> Enum.into(%{
+        name: "test role"
+      })
+      |> TimeAttendance.Accounts.create_role()
+
+    role
   end
 end

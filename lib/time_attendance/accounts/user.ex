@@ -13,6 +13,8 @@ defmodule TimeAttendance.Accounts.User do
     field :confirmed_at, :utc_datetime
     belongs_to :role, TimeAttendance.Accounts.Role
 
+    has_many :tokens, TimeAttendance.Accounts.UserToken
+
     timestamps(type: :utc_datetime)
   end
 

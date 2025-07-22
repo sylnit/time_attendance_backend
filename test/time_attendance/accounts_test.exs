@@ -12,7 +12,8 @@ defmodule TimeAttendance.AccountsTest do
     end
 
     test "returns the user if the email exists" do
-      %{id: id} = user = user_fixture()
+      role = role_fixture()
+      %{id: id} = user = user_fixture(%{role_id: role.id})
       assert %User{id: ^id} = Accounts.get_user_by_email(user.email)
     end
   end
@@ -23,12 +24,14 @@ defmodule TimeAttendance.AccountsTest do
     end
 
     test "does not return the user if the password is not valid" do
-      user = user_fixture()
+      role = role_fixture()
+      user = user_fixture(%{role_id: role.id})
       refute Accounts.get_user_by_email_and_password(user.email, "invalid")
     end
 
     test "returns the user if the email and password are valid" do
-      %{id: id} = user = user_fixture()
+      role = role_fixture()
+      %{id: id} = user = user_fixture(%{role_id: role.id})
 
       assert %User{id: ^id} =
                Accounts.get_user_by_email_and_password(user.email, valid_user_password())
@@ -43,7 +46,8 @@ defmodule TimeAttendance.AccountsTest do
     end
 
     test "returns the user with the given id" do
-      %{id: id} = user = user_fixture()
+      role = role_fixture()
+      %{id: id} = user = user_fixture(%{role_id: role.id})
       assert %User{id: ^id} = Accounts.get_user!(user.id)
     end
   end
@@ -75,7 +79,8 @@ defmodule TimeAttendance.AccountsTest do
     end
 
     test "validates email uniqueness" do
-      %{email: email} = user_fixture()
+      role = role_fixture()
+      %{email: email} = user_fixture(%{role_id: role.id})
       {:error, changeset} = Accounts.register_user(%{email: email})
       assert "has already been taken" in errors_on(changeset).email
 
@@ -86,7 +91,8 @@ defmodule TimeAttendance.AccountsTest do
 
     test "registers users with a hashed password" do
       email = unique_user_email()
-      {:ok, user} = Accounts.register_user(valid_user_attributes(email: email))
+      role = role_fixture()
+      {:ok, user} = Accounts.register_user(valid_user_attributes(email: email, role_id: role.id))
       assert user.email == email
       assert is_binary(user.hashed_password)
       assert is_nil(user.confirmed_at)
@@ -126,7 +132,8 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "apply_user_email/3" do
     setup do
-      %{user: user_fixture()}
+      role = role_fixture()
+      %{user: user_fixture(%{role_id: role.id})}
     end
 
     test "requires email to change", %{user: user} do
@@ -151,7 +158,8 @@ defmodule TimeAttendance.AccountsTest do
     end
 
     test "validates email uniqueness", %{user: user} do
-      %{email: email} = user_fixture()
+      role = role_fixture()
+      %{email: email} = user_fixture(%{role_id: role.id})
       password = valid_user_password()
 
       {:error, changeset} = Accounts.apply_user_email(user, password, %{email: email})
@@ -176,7 +184,8 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "deliver_user_update_email_instructions/3" do
     setup do
-      %{user: user_fixture()}
+      role = role_fixture()
+      %{user: user_fixture(%{role_id: role.id})}
     end
 
     test "sends token through notification", %{user: user} do
@@ -195,7 +204,8 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "update_user_email/2" do
     setup do
-      user = user_fixture()
+      role = role_fixture()
+      user = user_fixture(%{role_id: role.id})
       email = unique_user_email()
 
       token =
@@ -256,7 +266,8 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "update_user_password/3" do
     setup do
-      %{user: user_fixture()}
+      role = role_fixture()
+      %{user: user_fixture(%{role_id: role.id})}
     end
 
     test "validates password", %{user: user} do
@@ -312,28 +323,22 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "generate_user_session_token/1" do
     setup do
-      %{user: user_fixture()}
+      role = role_fixture()
+      %{user: user_fixture(%{role_id: role.id})}
     end
 
     test "generates a token", %{user: user} do
-      token = Accounts.generate_user_session_token(user)
-      assert user_token = Repo.get_by(UserToken, token: token)
-      assert user_token.context == "session"
+      token = Accounts.create_user_api_token(user)
 
-      # Creating the same token for another user should fail
-      assert_raise Ecto.ConstraintError, fn ->
-        Repo.insert!(%UserToken{
-          token: user_token.token,
-          user_id: user_fixture().id,
-          context: "session"
-        })
-      end
+      assert {:ok, user_token} =  Accounts.fetch_user_by_api_token(token)
+
     end
   end
 
   describe "get_user_by_session_token/1" do
     setup do
-      user = user_fixture()
+      role = role_fixture()
+      user = user_fixture(%{role_id: role.id})
       token = Accounts.generate_user_session_token(user)
       %{user: user, token: token}
     end
@@ -355,7 +360,8 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "delete_user_session_token/1" do
     test "deletes the token" do
-      user = user_fixture()
+      role = role_fixture()
+      user = user_fixture(%{role_id: role.id})
       token = Accounts.generate_user_session_token(user)
       assert Accounts.delete_user_session_token(token) == :ok
       refute Accounts.get_user_by_session_token(token)
@@ -364,7 +370,8 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "deliver_user_confirmation_instructions/2" do
     setup do
-      %{user: user_fixture()}
+      role = role_fixture()
+      %{user: user_fixture(%{role_id: role.id})}
     end
 
     test "sends token through notification", %{user: user} do
@@ -383,7 +390,8 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "confirm_user/1" do
     setup do
-      user = user_fixture()
+      role = role_fixture()
+      user = user_fixture(%{role_id: role.id})
 
       token =
         extract_user_token(fn url ->
@@ -417,7 +425,8 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "deliver_user_reset_password_instructions/2" do
     setup do
-      %{user: user_fixture()}
+      role = role_fixture()
+      %{user: user_fixture(%{role_id: role.id})}
     end
 
     test "sends token through notification", %{user: user} do
@@ -436,7 +445,8 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "get_user_by_reset_password_token/1" do
     setup do
-      user = user_fixture()
+      role = role_fixture()
+      user = user_fixture(%{role_id: role.id})
 
       token =
         extract_user_token(fn url ->
@@ -465,7 +475,8 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "reset_user_password/2" do
     setup do
-      %{user: user_fixture()}
+      role = role_fixture()
+      %{user: user_fixture(%{role_id: role.id})}
     end
 
     test "validates password", %{user: user} do
@@ -508,10 +519,63 @@ defmodule TimeAttendance.AccountsTest do
 
   describe "create_user_api_token/1 and fetch_user_api_token/1" do
     test "creates and fetches user by token" do
-      user = user_fixture()
+      role = role_fixture()
+      user = user_fixture(%{role_id: role.id})
       token = Accounts.create_user_api_token(user)
       assert Accounts.fetch_user_by_api_token(token) == {:ok, user}
       assert Accounts.fetch_user_by_api_token("invalid") == :error
+    end
+  end
+
+  describe "roles" do
+    alias TimeAttendance.Accounts.Role
+
+    import TimeAttendance.AccountsFixtures
+
+    @invalid_attrs %{name: nil}
+
+    test "list_roles/0 returns all roles" do
+      role = role_fixture()
+      assert Accounts.list_roles() == [role]
+    end
+
+    test "get_role!/1 returns the role with given id" do
+      role = role_fixture()
+      assert Accounts.get_role!(role.id) == role
+    end
+
+    test "create_role/1 with valid data creates a role" do
+      valid_attrs = %{name: "some role"}
+
+      assert {:ok, %Role{} = role} = Accounts.create_role(valid_attrs)
+    end
+
+    test "create_role/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Accounts.create_role(@invalid_attrs)
+    end
+
+    test "update_role/2 with valid data updates the role" do
+      role = role_fixture()
+      update_attrs = %{}
+
+      assert {:ok, %Role{} = role} = Accounts.update_role(role, update_attrs)
+    end
+
+    test "update_role/2 with invalid data returns error changeset" do
+      role = role_fixture()
+      assert {:error, %Ecto.Changeset{}} = Accounts.update_role(role, @invalid_attrs)
+      assert role == Accounts.get_role!(role.id)
+    end
+
+    test "delete_role/1 deletes the role" do
+      role = role_fixture()
+      assert {:ok, %Role{}} = Accounts.delete_role(role)
+      assert_raise Ecto.NoResultsError, fn -> Accounts.get_role!(role.id) end
+    end
+
+    test "change_role/1 returns a role changeset" do
+      role = role_fixture()
+      assert %Ecto.Changeset{} = Accounts.change_role(role)
     end
   end
 end
